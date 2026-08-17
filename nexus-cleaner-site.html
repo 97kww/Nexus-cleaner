@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NEXUS Cleaner — Otimização e limpeza focada em performance real</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #060506;
+    --bg-elevated: #0d0b0d;
+    --red: #ff2e43;
+    --red-dark: #8f0f1f;
+    --gradient: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+    --glass: rgba(255,255,255,0.035);
+    --glass-border: rgba(255,255,255,0.08);
+    --text-primary: #f3f5f8;
+    --text-secondary: #9aa3b4;
+    --text-tertiary: #5c6474;
+    --font-display: 'Chakra Petch', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --ease: cubic-bezier(0.4,0,0.2,1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.01em; }
+  a { color: inherit; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  .hairline {
+    height: 2px;
+    background: var(--gradient);
+    opacity: 0.5;
+    border: none;
+  }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    background: rgba(6,5,6,0.75);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+  .brand svg { width: 22px; height: 22px; color: var(--red); }
+  .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--text-secondary); }
+  .nav-links a:hover { color: var(--text-primary); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px; border-radius: 10px;
+    font-family: var(--font-display); font-weight: 600; font-size: 14px;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: transform 0.15s var(--ease), filter 0.15s var(--ease);
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn--primary { background: var(--gradient); color: #0a0304; }
+  .btn--primary:hover { filter: brightness(1.1); }
+  .btn--ghost { background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-primary); }
+  .btn--ghost:hover { background: rgba(255,255,255,0.06); }
+
+  /* Hero */
+  .hero {
+    position: relative;
+    padding: 120px 24px 100px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,46,67,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,46,67,0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 75%);
+    pointer-events: none;
+  }
+  .scan-line {
+    position: absolute; left: 0; right: 0; height: 140px;
+    top: -140px;
+    background: linear-gradient(180deg, transparent, rgba(255,46,67,0.15), transparent);
+    animation: scan 7s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes scan { 0% { top: -140px; } 55% { top: 100%; } 100% { top: 100%; } }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em;
+    color: var(--red); background: rgba(255,46,67,0.1);
+    border: 1px solid rgba(255,46,67,0.25);
+    padding: 6px 14px; border-radius: 999px; margin-bottom: 28px;
+    position: relative;
+  }
+  .eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .hero h1 {
+    font-size: clamp(38px, 6vw, 68px);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    max-width: 820px;
+    margin: 0 auto 22px;
+    position: relative;
+  }
+  .hero h1 span {
+    background: var(--gradient);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p {
+    font-size: 18px; color: var(--text-secondary);
+    max-width: 560px; margin: 0 auto 40px;
+    position: relative;
+  }
+  .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; }
+
+  .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.7s var(--ease) forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  /* Stats strip */
+  .stats {
+    display: flex; justify-content: center; gap: 56px; flex-wrap: wrap;
+    padding: 36px 24px; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+  }
+  .stat { text-align: center; }
+  .stat b { display: block; font-family: var(--font-mono); font-size: 26px; color: var(--red); }
+  .stat span { font-size: 12.5px; color: var(--text-tertiary); }
+
+  /* Sections */
+  section { padding: 96px 24px; }
+  .section-head { text-align: center; max-width: 620px; margin: 0 auto 56px; }
+  .section-head .eyebrow { background: none; border: none; padding: 0; color: var(--text-tertiary); }
+  .section-head .eyebrow::before { display: none; }
+  .section-head h2 { font-size: clamp(28px, 4vw, 38px); margin-bottom: 14px; }
+  .section-head p { color: var(--text-secondary); font-size: 16px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; max-width: 1000px; margin: 0 auto; }
+  .card {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 16px; padding: 26px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
+  }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--gradient); opacity: 0.5; }
+  .card:hover { border-color: rgba(255,255,255,0.16); transform: translateY(-2px); }
+  .card svg { width: 22px; height: 22px; color: var(--red); margin-bottom: 16px; }
+  .card h3 { font-size: 16px; margin-bottom: 8px; }
+  .card p { font-size: 14px; color: var(--text-secondary); }
+
+  /* Trust / philosophy */
+  .trust { background: var(--bg-elevated); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); }
+  .trust-copy h2 { font-size: clamp(26px, 3.6vw, 34px); margin-bottom: 16px; }
+  .trust-copy p { color: var(--text-secondary); margin-bottom: 20px; }
+  .trust-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .trust-list li { display: flex; gap: 12px; font-size: 14.5px; align-items: flex-start; }
+  .trust-list svg { width: 18px; height: 18px; color: var(--red); flex-shrink: 0; margin-top: 1px; }
+
+  /* Games */
+  .games { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; max-width: 700px; margin: 0 auto; }
+  .game-pill {
+    padding: 10px 20px; border-radius: 999px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    font-family: var(--font-display); font-size: 14px; font-weight: 600;
+  }
+
+  /* Final CTA */
+  .cta {
+    text-align: center; padding: 110px 24px;
+    position: relative;
+  }
+  .cta h2 { font-size: clamp(30px, 4.5vw, 44px); margin-bottom: 16px; }
+  .cta p { color: var(--text-secondary); margin-bottom: 34px; }
+
+  footer {
+    border-top: 1px solid var(--glass-border);
+    padding: 32px 24px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+  .footer-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--text-secondary); }
+  .footer-links { display: flex; gap: 22px; font-size: 13.5px; color: var(--text-tertiary); }
+  .footer-links a:hover { color: var(--text-primary); }
+
+  @media (max-width: 720px) {
+    .nav-links { display: none; }
+    .demo-body { flex-direction: column; max-height: none; }
+    .demo-sidebar { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--glass-border); }
+    .demo-nav-item { white-space: nowrap; }
+    .demo-content { max-height: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scan-line, .eyebrow::before { animation: none; }
+    .fade-up { animation: none; opacity: 1; transform: none; }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Painel demo interativo                                            */
+  /* ---------------------------------------------------------------- */
+  .demo-frame {
+    max-width: 1000px; margin: 0 auto;
+    border-radius: 18px; overflow: hidden;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+    background: #0a0809;
+  }
+  .demo-badge {
+    position: absolute; top: 14px; right: 14px; z-index: 5;
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em;
+    background: rgba(255,46,67,0.15); color: var(--red);
+    border: 1px solid rgba(255,46,67,0.3);
+    padding: 4px 10px; border-radius: 999px;
+  }
+  .demo-titlebar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px; height: 38px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--glass-border);
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--text-secondary);
+  }
+  .demo-titlebar .dots { display: flex; gap: 7px; }
+  .demo-titlebar .dots span { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.12); }
+  .demo-body { display: flex; min-height: 460px; position: relative; }
+  .demo-sidebar {
+    width: 190px; flex-shrink: 0; padding: 16px 10px;
+    border-right: 1px solid var(--glass-border);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .demo-nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 10px; border-radius: 8px;
+    font-size: 12.5px; font-weight: 500; color: var(--text-secondary);
+    cursor: pointer; background: none; border: none; width: 100%; text-align: left;
+    font-family: var(--font-body);
+    transition: background 0.15s var(--ease), color 0.15s var(--ease);
+  }
+  .demo-nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .demo-nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+  .demo-nav-item.active { background: rgba(255,255,255,0.07); color: var(--text-primary); }
+  .demo-content { flex: 1; padding: 22px; overflow-y: auto; max-height: 460px; }
+  .demo-content h4 { font-family: var(--font-display); font-size: 16px; margin-bottom: 4px; }
+  .demo-content .sub { font-size: 12px; color: var(--text-tertiary); margin-bottom: 18px; }
+
+  .demo-card {
+    background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px;
+    padding: 16px; position: relative; overflow: hidden; margin-bottom: 12px;
+  }
+  .demo-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: var(--gradient); opacity:0.5; }
+  .demo-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-bottom: 16px; }
+  .demo-stat { font-size: 10.5px; color: var(--text-tertiary); margin-bottom: 3px; }
+  .demo-stat-val { font-family: var(--font-mono); font-size: 15px; font-weight: 600; }
+
+  .demo-btn {
+    font-family: var(--font-body); font-weight: 600; font-size: 12px;
+    padding: 8px 14px; border-radius: 8px; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .demo-btn--primary { background: var(--gradient); color: #0a0304; }
+  .demo-btn--ghost { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--glass-border); }
+
+  .demo-progress { height: 5px; background: rgba(255,255,255,0.07); border-radius: 999px; overflow: hidden; margin: 10px 0; }
+  .demo-progress-fill { height: 100%; background: var(--gradient); width: 8%; transition: width 0.3s var(--ease); }
+
+  .demo-entry {
+    display: flex; align-items: center; gap: 9px; padding: 7px 4px; font-size: 12px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+  .demo-entry:first-child { border-top: none; }
+  .demo-entry input { accent-color: var(--red); }
+  .demo-entry .name { flex: 1; color: var(--text-secondary); }
+  .demo-entry .size { font-family: var(--font-mono); color: var(--text-primary); }
+
+  .demo-swatches { display: flex; gap: 8px; margin-top: 10px; }
+  .demo-swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); cursor: pointer; }
+
+  .demo-toast {
+    position: absolute; bottom: 16px; right: 16px;
+    background: rgba(13,11,13,0.95); border: 1px solid var(--glass-border);
+    border-radius: 10px; padding: 10px 14px; font-size: 12px;
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0; transform: translateY(8px); transition: all 0.25s var(--ease);
+    pointer-events: none;
+  }
+  .demo-toast.show { opacity: 1; transform: translateY(0); }
+  .demo-toast svg { width: 15px; height: 15px; color: #3ddc97; }
+
+  /* Como funciona */
+  .steps { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 0; }
+  .step { display: flex; gap: 24px; padding: 26px 0; border-bottom: 1px solid var(--glass-border); }
+  .step:last-child { border-bottom: none; }
+  .step-num { font-family: var(--font-mono); font-size: 13px; color: var(--red); flex-shrink: 0; width: 34px; padding-top: 3px; }
+  .step h3 { font-size: 16px; margin-bottom: 6px; }
+  .step p { font-size: 14px; color: var(--text-secondary); }
+
+  /* FAQ */
+  .faq { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+  .faq-item { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; }
+  .faq-q {
+    width: 100%; text-align: left; padding: 18px 20px; background: none; border: none; cursor: pointer;
+    color: var(--text-primary); font-family: var(--font-body); font-weight: 600; font-size: 14.5px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .faq-q svg { width: 16px; height: 16px; color: var(--text-tertiary); flex-shrink: 0; transition: transform 0.2s var(--ease); }
+  .faq-item.open .faq-q svg { transform: rotate(45deg); }
+  .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.25s var(--ease); }
+  .faq-a p { padding: 0 20px 18px; font-size: 14px; color: var(--text-secondary); }
+  .faq-item.open .faq-a { max-height: 200px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg>
+    NEXUS CLEANER
+  </div>
+  <div class="nav-links">
+    <a href="#recursos">Recursos</a>
+    <a href="#filosofia">Como funciona</a>
+    <a href="#jogos">Jogos</a>
+  </div>
+  <a href="https://discord.com" class="btn btn--primary" style="padding:9px 18px;font-size:13px;">Entrar no Discord</a>
+</nav>
+
+<section class="hero">
+  <div class="scan-line"></div>
+  <span class="eyebrow fade-up" style="animation-delay:0s">● EM DESENVOLVIMENTO ATIVO</span>
+  <h1 class="fade-up" style="animation-delay:0.05s">Performance real pros seus jogos, <span>sem enrolação.</span></h1>
+  <p class="fade-up" style="animation-delay:0.1s">NEXUS Cleaner limpa, otimiza e organiza seu Windows com foco em FPS e estabilidade — mostrando exatamente o que muda antes de mudar qualquer coisa.</p>
+  <div class="hero-ctas fade-up" style="animation-delay:0.15s">
+    <a href="https://discord.com" class="btn btn--primary">Entrar no Discord</a>
+    <a href="#recursos" class="btn btn--ghost">Ver recursos</a>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat"><b>100%</b><span>revisável antes de aplicar</span></div>
+  <div class="stat"><b>0</b><span>promessa de FPS inventada</span></div>
+  <div class="stat"><b>4</b><span>jogos com otimização dedicada</span></div>
+</div>
+
+<section id="recursos">
+  <div class="section-head">
+    <span class="eyebrow">RECURSOS</span>
+    <h2>Cada ferramenta explica o que faz</h2>
+    <p>Nada roda escondido. Cada ação mostra o que muda, onde muda e qual o risco — antes de você confirmar.</p>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8z"/></svg>
+      <h3>Limpeza item a item</h3>
+      <p>Veja exatamente quais arquivos serão apagados, com tamanho e nome, e desmarque o que quiser manter.</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14a8 8 0 0116 0"/><path d="M12 14l4-4"/><circle cx="12" cy="14" r="1"/></svg>
+      <h3>Otimização de jogos</h3>
+      <p>Plano de energia, Game Mode e prioridade de processo ajustados pro jogo que você está jogando agora.</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M9 7V3M15 7V3M9 21v-4M15 21v-4M7 9H3M7 15H3M21 9h-4M21 15h-4"/></svg>
+      <h3>Detecção de hardware</h3>
+      <p>Reconhece CPU, GPU e fabricante automaticamente, e só sugere otimizações compatíveis com sua máquina.</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="10" r="1.1"/><circle cx="14.5" cy="9" r="1.1"/><circle cx="16.5" cy="13.5" r="1.1"/><circle cx="12" cy="12" r="9"/></svg>
+      <h3>Cor personalizável</h3>
+      <p>Escolha a cor de destaque do app — a interface inteira se adapta.</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+      <h3>Reversível quando possível</h3>
+      <p>Cada otimização informa se pode ser desfeita — e guarda o valor anterior pra isso funcionar de verdade.</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8h12a4 4 0 014 4v2a4 4 0 01-7 2.6L14 15h-4l-1 1.6A4 4 0 012 16v-2a4 4 0 014-4z"/></svg>
+      <h3>Discord Rich Presence</h3>
+      <p>Aparece no seu status do Discord enquanto o app tá aberto, como qualquer outro jogo.</p>
+    </div>
+  </div>
+</section>
+
+<section id="demo">
+  <div class="section-head">
+    <span class="eyebrow">EXPERIMENTE</span>
+    <h2>Mexa no painel antes de baixar</h2>
+    <p>É o mesmo layout do app de verdade, com dados de demonstração. Clica pra explorar.</p>
+  </div>
+  <div style="position:relative;">
+    <span class="demo-badge">● MODO DEMONSTRAÇÃO</span>
+    <div class="demo-frame">
+      <div class="demo-titlebar">
+        <span style="display:flex;align-items:center;gap:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="color:var(--red)"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg>NEXUS CLEANER</span>
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="demo-body">
+        <div class="demo-sidebar" id="demo-sidebar"></div>
+        <div class="demo-content" id="demo-content"></div>
+        <div class="demo-toast" id="demo-toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><span id="demo-toast-text"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="filosofia" class="trust">
+  <div class="trust-copy" style="max-width:640px;margin:0 auto;text-align:center;">
+    <span class="eyebrow" style="background:none;border:none;padding:0;color:var(--text-tertiary);">FILOSOFIA</span>
+    <h2>Otimizador de verdade, não clique-e-reze.</h2>
+    <p>A maioria dos "otimizadores" promete FPS que não entrega e mexe no seu Windows sem avisar. NEXUS Cleaner faz o oposto.</p>
+    <ul class="trust-list" style="text-align:left;max-width:440px;margin:24px auto 0;">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12l3 3 5-6"/><circle cx="12" cy="12" r="9"/></svg>Cada otimização tem justificativa técnica real — nada só pra parecer que tem muita opção.</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12l3 3 5-6"/><circle cx="12" cy="12" r="9"/></svg>Documentos, fotos e saves nunca entram na lista de limpeza, nem por engano.</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12l3 3 5-6"/><circle cx="12" cy="12" r="9"/></svg>Sem promessa de "+300 FPS" — se o ganho for pequeno num PC específico, o app avisa.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="jogos">
+  <div class="section-head">
+    <span class="eyebrow">OTIMIZAÇÃO DEDICADA</span>
+    <h2>Feito pensando no que você joga</h2>
+    <p>Detecta se o jogo está aberto e ajusta a prioridade dele automaticamente.</p>
+  </div>
+  <div class="games">
+    <span class="game-pill">FiveM</span>
+    <span class="game-pill">GTA V</span>
+    <span class="game-pill">Roblox</span>
+    <span class="game-pill">VALORANT</span>
+  </div>
+</section>
+
+<section id="como-funciona">
+  <div class="section-head">
+    <span class="eyebrow">COMO FUNCIONA</span>
+    <h2>Do download ao primeiro ganho de FPS</h2>
+    <p>Cinco passos, sem enrolação.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">01</span>
+      <div><h3>Baixe o instalador</h3><p>Um único arquivo, sem letra miúda escondida.</p></div>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <div><h3>Entre com sua key</h3><p>Cadastro simples: usuário, senha e a key que você recebeu.</p></div>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <div><h3>Deixe o app te conhecer</h3><p>Detecta seu hardware pra só sugerir otimizações compatíveis.</p></div>
+    </div>
+    <div class="step">
+      <span class="step-num">04</span>
+      <div><h3>Analise antes de aplicar</h3><p>Toda ferramenta mostra o que vai mudar. Você decide o que confirmar.</p></div>
+    </div>
+    <div class="step">
+      <span class="step-num">05</span>
+      <div><h3>Jogue</h3><p>PC mais limpo, Windows ajustado, prioridade no jogo certo.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="section-head">
+    <span class="eyebrow">PERGUNTAS FREQUENTES</span>
+    <h2>Antes de perguntar no Discord</h2>
+  </div>
+  <div class="faq">
+    <div class="faq-item">
+      <button class="faq-q" data-faq>É seguro pro meu PC? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="faq-a"><p>Sim — nenhuma ferramenta apaga ou muda nada sem mostrar exatamente o que vai acontecer primeiro. Documentos, fotos e saves nunca entram na lista.</p></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" data-faq>Funciona em qualquer PC? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="faq-a"><p>Sim, mas as sugestões de otimização se adaptam ao seu hardware — o app detecta se você tem GPU Intel, AMD ou NVIDIA antes de sugerir qualquer coisa específica de fabricante.</p></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" data-faq>Como funciona a key de acesso? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="faq-a"><p>Cada key é única e ativa uma conta. As durações variam (diária, semanal, mensal ou vitalícia) dependendo do que você adquirir.</p></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" data-faq>Vai realmente aumentar meu FPS? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <div class="faq-a"><p>Depende do seu PC e do que já está rodando em segundo plano — por isso não prometemos número fechado. O app é honesto sobre o ganho esperado de cada ajuste.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <span class="eyebrow">COMUNIDADE</span>
+  <h2>Ainda em construção — acompanhe de perto.</h2>
+  <p>O NEXUS Cleaner tá em desenvolvimento ativo. Entra no Discord pra acompanhar as novidades e saber quando as keys abrirem.</p>
+  <a href="https://discord.com" class="btn btn--primary">Entrar no Discord</a>
+</section>
+
+<hr class="hairline" />
+
+<footer>
+  <div class="footer-brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"/></svg>
+    NEXUS CLEANER
+  </div>
+  <div class="footer-links">
+    <a href="https://www.instagram.com/knt26k/" target="_blank" rel="noopener">Criado por KNT26K</a>
+    <a href="https://discord.com" target="_blank" rel="noopener">Discord</a>
+  </div>
+</footer>
+
+<script>
+/* ------------------------------------------------------------------ */
+/* Painel demo - tudo aqui e simulado. Nenhuma chamada real ao sistema,  */
+/* nenhum arquivo tocado. So pra dar uma ideia de como o app de verdade  */
+/* se comporta.                                                          */
+/* ------------------------------------------------------------------ */
+(function () {
+  const ICONS = {
+    home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>',
+    sparkles: '<path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8z"/>',
+    gauge: '<path d="M4 14a8 8 0 0116 0"/><path d="M12 14l4-4"/><circle cx="12" cy="14" r="1"/>',
+    gamepad: '<path d="M6 8h12a4 4 0 014 4v2a4 4 0 01-7 2.6L14 15h-4l-1 1.6A4 4 0 012 16v-2a4 4 0 014-4z"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.97 7.97 0 000-2l2-1.5-2-3.4-2.4 1a8 8 0 00-1.7-1L15 3h-4l-.3 2.1a8 8 0 00-1.7 1l-2.4-1-2 3.4L6.6 11a7.97 7.97 0 000 2l-2 1.5 2 3.4 2.4-1a8 8 0 001.7 1L11 21h4l.3-2.1a8 8 0 001.7-1l2.4 1 2-3.4z"/>',
+  };
+  const svg = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ICONS[name]}</svg>`;
+
+  const NAV = [
+    { id: 'dashboard', label: 'Dashboard', icon: 'home' },
+    { id: 'limpeza', label: 'Limpeza Básica', icon: 'sparkles' },
+    { id: 'otimizacao', label: 'Otimização', icon: 'gauge' },
+    { id: 'jogos', label: 'Jogos', icon: 'gamepad' },
+    { id: 'config', label: 'Configurações', icon: 'settings' },
+  ];
+
+  const FAKE_ENTRIES = [
+    { name: 'installer_cache_2847.tmp', size: '412 MB' },
+    { name: 'nvidia_shader_stage', size: '380 MB' },
+    { name: 'windows_update_delta.tmp', size: '265 MB' },
+    { name: 'steam_appcache', size: '190 MB' },
+    { name: 'chrome_profile_temp', size: '88 MB' },
+  ];
+
+  const OPTS = [
+    { title: 'Plano de Energia: Alto Desempenho', why: 'Mantém o clock da CPU mais alto e estável durante jogos.', risk: 'Consome mais energia e gera mais calor.' },
+    { title: 'Windows Game Mode', why: 'Prioriza o jogo em primeiro plano na hora de distribuir CPU/GPU.', risk: 'Praticamente nenhum.' },
+    { title: 'Gravação em Segundo Plano (Game DVR)', why: 'Libera CPU/GPU/disco usados pelo gravador automático.', risk: 'Perde a gravação automática de clipes recentes.' },
+  ];
+
+  let view = 'dashboard';
+  let optApplied = [false, false, false];
+
+  const sidebarEl = document.getElementById('demo-sidebar');
+  const contentEl = document.getElementById('demo-content');
+
+  function paintSidebar() {
+    sidebarEl.innerHTML = NAV.map(
+      (n) => `<button class="demo-nav-item ${n.id === view ? 'active' : ''}" data-nav="${n.id}">${svg(n.icon)}${n.label}</button>`
+    ).join('');
+    sidebarEl.querySelectorAll('[data-nav]').forEach((btn) => {
+      btn.addEventListener('click', () => { view = btn.dataset.nav; render(); });
+    });
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('demo-toast');
+    document.getElementById('demo-toast-text').textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove('show'), 2400);
+  }
+
+  function render() {
+    paintSidebar();
+    if (view === 'dashboard') return renderDashboard();
+    if (view === 'limpeza') return renderLimpeza();
+    if (view === 'otimizacao') return renderOtimizacao();
+    if (view === 'jogos') return renderJogos();
+    if (view === 'config') return renderConfig();
+  }
+
+  function renderDashboard() {
+    contentEl.innerHTML = `
+      <h4>Olá, visitante</h4>
+      <div class="sub">Resumo do sistema (dados de exemplo)</div>
+      <div class="demo-card-grid">
+        <div class="demo-card"><div class="demo-stat">Processador</div><div class="demo-stat-val" style="font-size:12.5px;">AMD Ryzen 5 5600X</div></div>
+        <div class="demo-card"><div class="demo-stat">Memória RAM</div><div class="demo-stat-val">16 GB</div></div>
+        <div class="demo-card"><div class="demo-stat">Placa de vídeo</div><div class="demo-stat-val" style="font-size:12.5px;">NVIDIA RTX 3060</div></div>
+        <div class="demo-card"><div class="demo-stat">Plano de energia</div><div class="demo-stat-val" style="font-size:12.5px;">Alto Desempenho</div></div>
+      </div>
+      <div class="demo-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Espaço total liberado</div>
+        <div class="demo-stat-val" style="font-size:20px;">0 MB</div>
+        <div style="font-size:11.5px;color:var(--text-tertiary);margin-top:4px;">Vai pra Limpeza Básica na barra lateral pra testar.</div>
+      </div>
+    `;
+  }
+
+  function renderLimpeza(state) {
+    state = state || 'idle';
+    if (state === 'idle') {
+      contentEl.innerHTML = `
+        <h4>Limpeza Básica</h4>
+        <div class="sub">Remove arquivos temporários com segurança - a limpeza do dia a dia.</div>
+        <div class="demo-card">
+          <div style="font-size:13px;margin-bottom:12px;">Nenhum arquivo é alterado nesta etapa.</div>
+          <button class="demo-btn demo-btn--primary" id="demo-scan">${svg('gauge')} Analisar</button>
+        </div>
+      `;
+      document.getElementById('demo-scan').addEventListener('click', () => runScan());
+      return;
+    }
+    if (state === 'scanning') {
+      contentEl.innerHTML = `
+        <h4>Limpeza Básica</h4>
+        <div class="sub">Analisando...</div>
+        <div class="demo-card"><div class="demo-progress"><div class="demo-progress-fill" id="demo-fill"></div></div></div>
+      `;
+      return;
+    }
+    if (state === 'results') {
+      contentEl.innerHTML = `
+        <h4>Limpeza Básica</h4>
+        <div class="sub" style="color:#3ddc97;">Análise concluída</div>
+        <div class="demo-card">
+          ${FAKE_ENTRIES.map((e, i) => `
+            <div class="demo-entry">
+              <input type="checkbox" checked data-entry="${i}" />
+              <span class="name">${e.name}</span>
+              <span class="size">${e.size}</span>
+            </div>`).join('')}
+        </div>
+        <button class="demo-btn demo-btn--primary" id="demo-clean">${svg('sparkles')} Limpar</button>
+      `;
+      document.getElementById('demo-clean').addEventListener('click', () => {
+        toast('1,3 GB liberados (demonstração)');
+        renderLimpeza('idle');
+      });
+      return;
+    }
+  }
+
+  function runScan() {
+    renderLimpeza('scanning');
+    let pct = 10;
+    const timer = setInterval(() => {
+      pct = Math.min(pct + 18, 100);
+      const fill = document.getElementById('demo-fill');
+      if (fill) fill.style.width = pct + '%';
+      if (pct >= 100) { clearInterval(timer); setTimeout(() => renderLimpeza('results'), 250); }
+    }, 200);
+  }
+
+  function renderOtimizacao() {
+    contentEl.innerHTML = `
+      <h4>Otimização</h4>
+      <div class="sub">Cada item mostra o que muda antes de aplicar.</div>
+      ${OPTS.map((o, i) => `
+        <div class="demo-card">
+          <div style="font-weight:600;font-size:13px;margin-bottom:6px;">${o.title}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;"><b style="color:var(--text-tertiary);">Benefício:</b> ${o.why}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;"><b style="color:var(--text-tertiary);">Risco:</b> ${o.risk}</div>
+          <button class="demo-btn ${optApplied[i] ? 'demo-btn--ghost' : 'demo-btn--primary'}" data-apply="${i}" ${optApplied[i] ? 'disabled' : ''}>
+            ${svg('gauge')} ${optApplied[i] ? 'Aplicada' : 'Aplicar'}
+          </button>
+        </div>`).join('')}
+    `;
+    contentEl.querySelectorAll('[data-apply]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const i = Number(btn.dataset.apply);
+        optApplied[i] = true;
+        toast('Aplicado (demonstração)');
+        renderOtimizacao();
+      });
+    });
+  }
+
+  function renderJogos() {
+    const games = ['FiveM', 'GTA V', 'Roblox', 'VALORANT'];
+    contentEl.innerHTML = `
+      <h4>Jogos</h4>
+      <div class="sub">Detecta se o jogo tá aberto e ajusta a prioridade dele.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${games.map((g) => `
+          <div class="demo-card" style="margin-bottom:0;">
+            <div style="font-weight:600;font-size:13px;margin-bottom:10px;">${g}</div>
+            <button class="demo-btn demo-btn--primary" data-game="${g}" style="width:100%;justify-content:center;">Otimizar</button>
+          </div>`).join('')}
+      </div>
+    `;
+    contentEl.querySelectorAll('[data-game]').forEach((btn) => {
+      btn.addEventListener('click', () => toast(`Otimizado pra ${btn.dataset.game} (demonstração)`));
+    });
+  }
+
+  function renderConfig() {
+    const colors = ['#ff2e43', '#3fe1c5', '#7b6cff', '#ffb454', '#3ddc97'];
+    contentEl.innerHTML = `
+      <h4>Configurações</h4>
+      <div class="sub">Essa parte é real - tenta trocar a cor.</div>
+      <div class="demo-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px;">Cor principal</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">Muda a cor de destaque do painel.</div>
+        <div class="demo-swatches">
+          ${colors.map((c) => `<button class="demo-swatch" data-color="${c}" style="background:${c};"></button>`).join('')}
+        </div>
+      </div>
+    `;
+    contentEl.querySelectorAll('[data-color]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelector('.demo-frame').style.setProperty('--red', btn.dataset.color);
+        document.documentElement.style.setProperty('--red', btn.dataset.color);
+      });
+    });
+  }
+
+  render();
+
+  document.querySelectorAll('.faq-item').forEach((item) => {
+    item.querySelector('.faq-q').addEventListener('click', () => {
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach((i) => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+})();
+</script>
+</body>
+</html>
